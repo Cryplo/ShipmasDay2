@@ -9,6 +9,7 @@ interface WiringDiagramProps {
   bulbStates: boolean[];
   revealedConnections: Set<string>;
   activeSwitch: number | null;
+  hoveredSwitch: number | null;
 }
 
 export default function WiringDiagram({
@@ -17,6 +18,7 @@ export default function WiringDiagram({
   bulbStates,
   revealedConnections,
   activeSwitch,
+  hoveredSwitch,
 }: WiringDiagramProps) {
   const numSwitches = wiring.length;
   const numBulbs = bulbStates.length;
@@ -56,6 +58,7 @@ export default function WiringDiagram({
           const connectionKey = `${switchIndex}-${bulbIndex}`;
           const isRevealed = revealedConnections.has(connectionKey);
           const isActive = activeSwitch === switchIndex;
+          const isHovered = hoveredSwitch === switchIndex;
 
           // Y positions: header + row index * row height + half component height (32px = ~42% of 76)
           const startY = headerHeight + switchIndex * rowHeight + 32;
@@ -91,18 +94,18 @@ export default function WiringDiagram({
                 d={path}
                 fill="none"
                 stroke={
-                  isActive
+                  isActive || isHovered
                     ? wireColor
                     : isRevealed
                       ? '#b8b4ae'
                       : '#d4d0c8'
                 }
-                strokeWidth={isActive ? 2 : 1.5}
+                strokeWidth={isActive ? 2 : isHovered ? 2 : 1.5}
                 vectorEffect="non-scaling-stroke"
                 strokeDasharray="none"
                 initial={{ opacity: 0.3 }}
                 animate={{
-                  opacity: isActive ? 1 : isRevealed ? 0.7 : 0.4,
+                  opacity: isActive || isHovered ? 1 : isRevealed ? 0.7 : 0.4,
                   strokeDashoffset: isActive ? [0, -8] : 0,
                 }}
                 transition={{

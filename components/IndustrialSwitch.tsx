@@ -8,6 +8,8 @@ interface IndustrialSwitchProps {
   index: number;
   isHighlighted?: boolean;
   disabled?: boolean;
+  onHoverStart?: () => void;
+  onHoverEnd?: () => void;
 }
 
 export default function IndustrialSwitch({
@@ -16,6 +18,8 @@ export default function IndustrialSwitch({
   index,
   isHighlighted = false,
   disabled = false,
+  onHoverStart,
+  onHoverEnd,
 }: IndustrialSwitchProps) {
   return (
     <div className="flex items-center gap-3">
@@ -30,6 +34,8 @@ export default function IndustrialSwitch({
       <button
         onClick={onToggle}
         disabled={disabled}
+        onMouseEnter={onHoverStart}
+        onMouseLeave={onHoverEnd}
         className={`
           relative w-10 h-16 rounded-md
           bg-gradient-to-b from-soft-50 to-soft-200

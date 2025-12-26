@@ -11,6 +11,7 @@ export default function GridSyncGame() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [revealedConnections, setRevealedConnections] = useState<Set<string>>(new Set());
   const [activeSwitch, setActiveSwitch] = useState<number | null>(null);
+  const [hoveredSwitch, setHoveredSwitch] = useState<number | null>(null);
   const [moveCount, setMoveCount] = useState(0);
   const [isVictory, setIsVictory] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
@@ -294,6 +295,8 @@ export default function GridSyncGame() {
                 index={index}
                 isHighlighted={activeSwitch === index}
                 disabled={isVictory}
+                onHoverStart={() => setHoveredSwitch(index)}
+                onHoverEnd={() => setHoveredSwitch(null)}
               />
             ))}
           </div>
@@ -306,6 +309,7 @@ export default function GridSyncGame() {
               bulbStates={puzzle.bulbStates}
               revealedConnections={revealedConnections}
               activeSwitch={activeSwitch}
+              hoveredSwitch={hoveredSwitch}
             />
           </div>
 
