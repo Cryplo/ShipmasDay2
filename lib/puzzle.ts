@@ -30,27 +30,31 @@ export interface Puzzle {
 export function generatePuzzle(config: PuzzleConfig = { numSwitches: 5, numBulbs: 5 }): Puzzle {
   const { numSwitches, numBulbs } = config;
 
-  // Generate random wiring - each switch affects 1-3 bulbs
+  // Generate random wiring - each switch affects 2-4 bulbs (minimum 2)
   const wiring: number[][] = [];
 
   // Ensure each bulb is controlled by at least one switch
   const bulbCoverage = new Set<number>();
 
   for (let i = 0; i < numSwitches; i++) {
-    const numConnections = Math.floor(Math.random() * 3) + 1; // 1-3 connections
+    const numConnections = Math.floor(Math.random() * 3) + 2; // 2-4 connections (minimum 2)
     const connections = new Set<number>();
 
     // If we haven't covered all bulbs yet, prioritize uncovered ones
-    for (let j = 0; j < numConnections; j++) {
+    while (connections.size < numConnections) {
       let bulbIndex: number;
 
-      if (bulbCoverage.size < numBulbs && j === 0) {
-        // Find an uncovered bulb
+      if (bulbCoverage.size < numBulbs && connections.size < 2) {
+        // Find an uncovered bulb first
         const uncovered = [];
         for (let b = 0; b < numBulbs; b++) {
-          if (!bulbCoverage.has(b)) uncovered.push(b);
+          if (!bulbCoverage.has(b) && !connections.has(b)) uncovered.push(b);
         }
-        bulbIndex = uncovered[Math.floor(Math.random() * uncovered.length)];
+        if (uncovered.length > 0) {
+          bulbIndex = uncovered[Math.floor(Math.random() * uncovered.length)];
+        } else {
+          bulbIndex = Math.floor(Math.random() * numBulbs);
+        }
       } else {
         bulbIndex = Math.floor(Math.random() * numBulbs);
       }
