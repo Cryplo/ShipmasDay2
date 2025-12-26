@@ -74,14 +74,29 @@ export function generatePuzzle(config: PuzzleConfig = { numSwitches: 5, numBulbs
     }
   }
 
-  // The solution: a random configuration of switches
-  const solution: boolean[] = [];
-  for (let i = 0; i < numSwitches; i++) {
-    solution.push(Math.random() > 0.5);
-  }
+  // The solution: all switches OFF (this is our target state where all bulbs are lit)
+  const solution: boolean[] = new Array(numSwitches).fill(false);
 
-  // Scramble starting positions (opposite of solution)
-  const switchStates: boolean[] = solution.map(s => !s);
+  // Start from the solved state (all switches match solution, all bulbs lit)
+  const switchStates: boolean[] = [...solution];
+
+  // Randomly toggle switches to scramble the puzzle
+  // Toggle between 3 and numSwitches random switches (ensuring puzzle isn't already solved)
+  const numToggles = Math.floor(Math.random() * (numSwitches - 2)) + 3;
+  const toggledIndices: number[] = [];
+  
+  // Pick random switches to toggle (each switch toggled at most once to ensure solvability)
+  while (toggledIndices.length < numToggles) {
+    const randomIndex = Math.floor(Math.random() * numSwitches);
+    if (!toggledIndices.includes(randomIndex)) {
+      toggledIndices.push(randomIndex);
+    }
+  }
+  
+  // Apply the toggles
+  for (let i = 0; i < toggledIndices.length; i++) {
+    switchStates[toggledIndices[i]] = !switchStates[toggledIndices[i]];
+  }
 
   // Calculate initial bulb states
   const bulbStates = calculateBulbStates(switchStates, solution, wiring, numBulbs);
