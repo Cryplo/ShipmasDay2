@@ -14,7 +14,7 @@ export default function GridSyncGame() {
   const [hoveredSwitch, setHoveredSwitch] = useState<number | null>(null);
   const [moveCount, setMoveCount] = useState(0);
   const [isVictory, setIsVictory] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(true);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -34,8 +34,8 @@ export default function GridSyncGame() {
     }
   }, [startTime, isVictory]);
 
-  // Sound effect helper
-  const playSound = useCallback((type: 'click' | 'victory' | 'bulb') => {
+  // Sound effect helper - single click sound for switch toggle
+  const playSound = useCallback(() => {
     if (typeof window === 'undefined') return;
 
     if (!audioContextRef.current) {
@@ -49,50 +49,27 @@ export default function GridSyncGame() {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    if (type === 'click') {
-      oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.1);
-      gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.1);
-    } else if (type === 'bulb') {
-      oscillator.frequency.setValueAtTime(600, ctx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
-      gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.15);
-    } else if (type === 'victory') {
-      // Play a chord
-      const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-      frequencies.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
-        gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.1 + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2);
-        osc.start(ctx.currentTime + i * 0.1);
-        osc.stop(ctx.currentTime + 2);
-      });
-    }
+    // Simple click sound
+    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
+    gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.08);
+  }, []);
+
+  // Start game from tutorial
+  const handleStartGame = useCallback(() => {
+    setShowTutorial(false);
+    setStartTime(Date.now());
   }, []);
 
   // Handle switch toggle
   const handleToggle = useCallback((switchIndex: number) => {
-    if (!puzzle || isVictory) return;
+    if (!puzzle || isVictory || showTutorial) return;
 
-    // Start timer on first move
-    if (!startTime) {
-      setStartTime(Date.now());
-    }
-
-    setShowInstructions(false);
     setActiveSwitch(switchIndex);
-    playSound('click');
+    playSound();
 
     // Reveal connections for this switch
     const newRevealed = new Set(revealedConnections);
@@ -106,23 +83,14 @@ export default function GridSyncGame() {
     setPuzzle(newPuzzle);
     setMoveCount((prev) => prev + 1);
 
-    // Play bulb sound if any bulb changed to on
-    const anyNewlyLit = newPuzzle.bulbStates.some(
-      (state, i) => state && !puzzle.bulbStates[i]
-    );
-    if (anyNewlyLit) {
-      setTimeout(() => playSound('bulb'), 50);
-    }
-
     // Check for victory
     if (isSolved(newPuzzle)) {
       setIsVictory(true);
-      setTimeout(() => playSound('victory'), 200);
     }
 
     // Clear active switch after animation
     setTimeout(() => setActiveSwitch(null), 300);
-  }, [puzzle, isVictory, startTime, revealedConnections, playSound]);
+  }, [puzzle, isVictory, showTutorial, revealedConnections, playSound]);
 
   // Reset game
   const handleReset = useCallback(() => {
@@ -131,9 +99,9 @@ export default function GridSyncGame() {
     setActiveSwitch(null);
     setMoveCount(0);
     setIsVictory(false);
+    setShowTutorial(true);
     setStartTime(null);
     setElapsedTime(0);
-    setShowInstructions(true);
   }, []);
 
   // Format time display
@@ -152,7 +120,7 @@ export default function GridSyncGame() {
   }
 
   return (
-    <div className="min-h-screen bg-soft-100 relative overflow-hidden">
+    <div className="min-h-screen bg-soft-100 relative overflow-hidden flex flex-col">
       {/* Soft background pattern */}
       <div
         className="absolute inset-0 opacity-30"
@@ -167,119 +135,143 @@ export default function GridSyncGame() {
         }}
       />
 
-      {/* Victory overlay */}
+      {/* Tutorial overlay */}
       <AnimatePresence>
-        {isVictory && (
+        {showTutorial && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-soft-100"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Pulsing background */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-radial from-holiday-green/20 via-transparent to-transparent"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
+            {/* Same background pattern */}
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: `
+                  radial-gradient(circle at 20% 20%, rgba(200, 80, 80, 0.05) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(74, 159, 90, 0.05) 0%, transparent 50%),
+                  linear-gradient(rgba(200, 200, 200, 0.2) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(200, 200, 200, 0.2) 1px, transparent 1px)
+                `,
+                backgroundSize: '100% 100%, 100% 100%, 40px 40px, 40px 40px',
               }}
-              transition={{ duration: 1, repeat: Infinity }}
             />
 
-            {/* Victory card */}
             <motion.div
-              className="relative bg-white border-2 border-holiday-green rounded-xl p-8 shadow-xl text-center"
-              initial={{ scale: 0.8, opacity: 0 }}
+              className="relative z-10 max-w-md mx-auto p-8 text-center"
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', duration: 0.5, delay: 0.2 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.5 }}
             >
-              <motion.div
-                className="absolute inset-0 rounded-xl"
-                style={{
-                  background: 'linear-gradient(45deg, rgba(200,80,80,0.05), rgba(74,159,90,0.05))',
-                }}
-                animate={{
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
+              <h1 className="text-3xl font-bold text-holiday-red tracking-wide mb-2">
+                GRID SYNC
+              </h1>
+              <p className="text-soft-500 font-mono text-sm mb-8">Holiday Light Puzzle</p>
 
-              <motion.h2
-                className="text-3xl font-bold text-holiday-green mb-2 relative"
-                animate={{ textShadow: ['0 0 10px rgba(74,159,90,0.3)', '0 0 20px rgba(74,159,90,0.5)', '0 0 10px rgba(74,159,90,0.3)'] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                GRID SYNCHRONIZED
-              </motion.h2>
-
-              <p className="text-soft-600 font-mono mb-4 relative">
-                All lights are shining bright!
-              </p>
-
-              <div className="flex gap-8 justify-center mb-6 relative">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-holiday-red">{moveCount}</div>
-                  <div className="text-xs text-soft-500 uppercase">Switches</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-holiday-green">{formatTime(elapsedTime)}</div>
-                  <div className="text-xs text-soft-500 uppercase">Time</div>
-                </div>
+              <div className="space-y-4 text-left mb-8 text-soft-700">
+                <p className="flex items-start gap-3">
+                  <span className="text-holiday-red font-bold">1.</span>
+                  <span>Each switch controls multiple light bulbs through hidden connections.</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-holiday-green font-bold">2.</span>
+                  <span>Toggle switches to light up all the bulbs.</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-holiday-red font-bold">3.</span>
+                  <span>Hover over a switch to see which bulbs it connects to.</span>
+                </p>
               </div>
 
               <motion.button
-                onClick={handleReset}
-                className="px-6 py-3 bg-holiday-green hover:bg-green-600 text-white font-bold rounded-lg transition-colors relative"
+                onClick={handleStartGame}
+                className="px-8 py-4 bg-holiday-green hover:bg-green-600 text-white font-bold rounded-lg transition-colors text-lg"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                NEW GRID
+                START GAME
               </motion.button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <header className="relative z-10 p-4 border-b border-soft-300 bg-white/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-holiday-red tracking-wide">GRID SYNC</h1>
-            <p className="text-xs text-soft-500 font-mono">Holiday Light Puzzle</p>
-          </div>
+      {/* Victory overlay */}
+      <AnimatePresence>
+        {isVictory && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-soft-100"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Same background pattern */}
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: `
+                  radial-gradient(circle at 20% 20%, rgba(200, 80, 80, 0.05) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(74, 159, 90, 0.05) 0%, transparent 50%),
+                  linear-gradient(rgba(200, 200, 200, 0.2) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(200, 200, 200, 0.2) 1px, transparent 1px)
+                `,
+                backgroundSize: '100% 100%, 100% 100%, 40px 40px, 40px 40px',
+              }}
+            />
 
-          <div className="flex items-center gap-6">
-            {/* Stats */}
-            <div className="flex gap-4 text-sm font-mono">
-              <div className="text-center">
-                <div className="text-holiday-red">{moveCount}</div>
-                <div className="text-xs text-soft-500">MOVES</div>
-              </div>
-              <div className="text-center">
-                <div className="text-soft-700">{formatTime(elapsedTime)}</div>
-                <div className="text-xs text-soft-500">TIME</div>
-              </div>
-              <div className="text-center">
-                <div className="text-holiday-green">
-                  {puzzle.bulbStates.filter(Boolean).length}/{puzzle.bulbStates.length}
-                </div>
-                <div className="text-xs text-soft-500">LIT</div>
-              </div>
-            </div>
-
-            {/* Reset button */}
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 text-sm font-mono text-soft-600 border border-soft-300 rounded-lg hover:border-holiday-red hover:text-holiday-red transition-colors bg-white"
+            <motion.div
+              className="relative z-10 max-w-md mx-auto p-8 text-center"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.5 }}
             >
-              RESET
-            </button>
-          </div>
-        </div>
-      </header>
+              <motion.h2
+                className="text-3xl font-bold text-holiday-green mb-2"
+                animate={{ 
+                  textShadow: [
+                    '0 0 10px rgba(74,159,90,0.3)', 
+                    '0 0 20px rgba(74,159,90,0.5)', 
+                    '0 0 10px rgba(74,159,90,0.3)'
+                  ] 
+                }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                GRID SYNCHRONIZED
+              </motion.h2>
+
+              <p className="text-soft-600 font-mono mb-8">
+                All lights are shining bright!
+              </p>
+
+              <div className="flex gap-8 justify-center mb-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-holiday-red">{moveCount}</div>
+                  <div className="text-xs text-soft-500 uppercase">Moves</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-holiday-green">{formatTime(elapsedTime)}</div>
+                  <div className="text-xs text-soft-500 uppercase">Time</div>
+                </div>
+              </div>
+
+              <motion.button
+                onClick={handleReset}
+                className="px-8 py-4 bg-holiday-green hover:bg-green-600 text-white font-bold rounded-lg transition-colors text-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                PLAY AGAIN
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main game area */}
-      <main className="relative z-10 max-w-4xl mx-auto p-8">
+      <main className="relative z-10 flex-1 max-w-4xl mx-auto p-8 w-full flex flex-col">
         {/* Game grid */}
         <div className="relative flex justify-between items-start">
           {/* Switches column */}
@@ -294,7 +286,7 @@ export default function GridSyncGame() {
                 onToggle={() => handleToggle(index)}
                 index={index}
                 isHighlighted={activeSwitch === index}
-                disabled={isVictory}
+                disabled={isVictory || showTutorial}
                 onHoverStart={() => setHoveredSwitch(index)}
                 onHoverEnd={() => setHoveredSwitch(null)}
               />
@@ -330,31 +322,33 @@ export default function GridSyncGame() {
           </div>
         </div>
 
-        {/* Instructions - below the game */}
-        <AnimatePresence>
-          {showInstructions && (
-            <motion.div
-              className="mt-8 p-4 bg-white/80 backdrop-blur-sm border border-soft-300 rounded-xl shadow-soft"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-            >
-              <p className="text-sm text-soft-600 text-center font-mono">
-                Toggle switches to light all bulbs. Each switch controls hidden connections.
-                <br />
-                <span className="text-holiday-red">Find the right combination to light them all!</span>
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+        {/* Bottom stats bar */}
+        <div className="mt-8 flex items-center justify-center gap-6 text-sm font-mono">
+          <div className="flex gap-4">
+            <div className="text-center">
+              <div className="text-holiday-red font-bold">{moveCount}</div>
+              <div className="text-xs text-soft-500">MOVES</div>
+            </div>
+            <div className="text-center">
+              <div className="text-soft-700 font-bold">{formatTime(elapsedTime)}</div>
+              <div className="text-xs text-soft-500">TIME</div>
+            </div>
+            <div className="text-center">
+              <div className="text-holiday-green font-bold">
+                {puzzle.bulbStates.filter(Boolean).length}/{puzzle.bulbStates.length}
+              </div>
+              <div className="text-xs text-soft-500">LIT</div>
+            </div>
+          </div>
 
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 p-4 border-t border-soft-300 bg-white/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto text-center text-xs text-soft-500 font-mono">
-          Shipmas 2025 &middot; Day 26 &middot; Holiday Grid Puzzle
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-mono text-soft-600 border border-soft-300 rounded-lg hover:border-holiday-red hover:text-holiday-red transition-colors bg-white"
+          >
+            RESET
+          </button>
         </div>
-      </footer>
+      </main>
     </div>
   );
 }

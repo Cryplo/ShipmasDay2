@@ -30,39 +30,42 @@ export default function WiringDiagram({
 
   if (!mounted) return null;
 
-  // Layout calculations
-  // Each row: header (mb-2 = 8px) + component height (h-16 = 64px) + gap (gap-3 = 12px) = 76px per item
-  // But first item has no gap above, so: header height + (n * 64) + ((n-1) * 12)
-  const rowHeight = 76; // Component + gap
-  const headerHeight = 28; // "Control Panel" label + mb-2
+  // Layout calculations (in pixels, matching the actual CSS)
+  // Header: text-xs (~16px with line height) + mb-2 (8px) = ~24px
+  // Each row: component height (h-16 = 64px) + gap (gap-3 = 12px) = 76px per row
+  const rowHeight = 76; // Component (64px) + gap (12px)
+  const headerHeight = 24; // "Control Panel" label + mb-2
+  const componentHeight = 64; // h-16
 
-  // ViewBox dimensions - use 100 units for width to make percentages easier
+  // ViewBox uses percentage for X (0-100) to scale horizontally
+  // Y values are in the same units as rowHeight for accurate positioning
   const viewBoxWidth = 100;
   const viewBoxHeight = headerHeight + Math.max(numSwitches, numBulbs) * rowHeight;
 
   // X positions (as percentage of width)
-  // The switch column on the left ends around 10% of the container width
-  // The bulb column on the right starts around 90% of the container width
   const startX = 10;
   const endX = 90;
 
+  // Calculate actual pixel height for the SVG
+  const actualHeight = headerHeight + Math.max(numSwitches, numBulbs) * rowHeight;
+
   return (
     <svg
-      className="absolute inset-0 pointer-events-none overflow-visible"
-      style={{ width: '100%', height: '100%' }}
+      className="absolute top-0 left-0 right-0 pointer-events-none overflow-visible"
+      style={{ width: '100%', height: actualHeight }}
       viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
       preserveAspectRatio="none"
     >
       {wiring.map((connections, switchIndex) =>
         connections.map((bulbIndex) => {
           const connectionKey = `${switchIndex}-${bulbIndex}`;
-          const isRevealed = revealedConnections.has(connectionKey);
           const isActive = activeSwitch === switchIndex;
           const isHovered = hoveredSwitch === switchIndex;
 
-          // Y positions: header + row index * row height + half component height (32px = ~42% of 76)
-          const startY = headerHeight + switchIndex * rowHeight + 32;
-          const endY = headerHeight + bulbIndex * rowHeight + 32;
+          // Y positions: header + row index * row height + half component height
+          // Component is h-16 (64px), so center is at componentHeight/2 from top of component
+          const startY = headerHeight + switchIndex * rowHeight + componentHeight / 2;
+          const endY = headerHeight + bulbIndex * rowHeight + componentHeight / 2;
 
           // Create curved path with control points at the midpoint
           const midX = (startX + endX) / 2;
@@ -93,19 +96,13 @@ export default function WiringDiagram({
               <motion.path
                 d={path}
                 fill="none"
-                stroke={
-                  isActive || isHovered
-                    ? wireColor
-                    : isRevealed
-                      ? '#b8b4ae'
-                      : '#d4d0c8'
-                }
-                strokeWidth={isActive ? 2 : isHovered ? 2 : 1.5}
+                stroke={isActive || isHovered ? wireColor : '#d4d0c8'}
+                strokeWidth={isActive || isHovered ? 2 : 1.5}
                 vectorEffect="non-scaling-stroke"
                 strokeDasharray="none"
-                initial={{ opacity: 0.3 }}
+                initial={{ opacity: 0.4 }}
                 animate={{
-                  opacity: isActive || isHovered ? 1 : isRevealed ? 0.7 : 0.4,
+                  opacity: isActive || isHovered ? 1 : 0.4,
                   strokeDashoffset: isActive ? [0, -8] : 0,
                 }}
                 transition={{
