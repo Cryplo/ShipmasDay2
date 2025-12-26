@@ -1,0 +1,36 @@
+You are a senior creative engineer and game designer.
+Your task is to design and implement a small, polished web experience that delivers a strong sense of satisfaction and dopamine in under 60 seconds of use.
+Concept
+Build a high-speed logic puzzle where the player acts as a Holiday Systems Engineer repairing a fractured festive electrical grid.
+The interface consists of:
+Left side: a vertical column of industrial-style toggle switches (inputs).
+Right side: a corresponding vertical column of high-voltage holiday bulbs, initially unlit.
+Each switch is secretly wired to bulbs through a hidden bipartite graph. Toggling one switch may invert the state of multiple bulbs (e.g., two or three at once). These relationships are randomly generated but guaranteed solvable, ensuring there is always exactly one combination of switch states that lights all bulbs.
+Core Gameplay
+The player toggles switches and observes how bulbs react.
+Using deduction and pattern recognition, the player infers the invisible wiring.
+The objective is to find the exact switch configuration that brings the entire system into equilibrium with all bulbs glowing.
+The puzzle should be solvable quickly (ideally 30–60 seconds) and feel fair.
+Reward
+When the correct configuration is reached:
+All bulbs activate simultaneously.
+The UI delivers a synchronized, high-impact reward moment:
+Clean, satisfying animation.
+Harmonic chime or layered sound cue.
+Optional subtle haptic-style visual feedback (screen pulse, glow, or vibration effect).
+This moment should feel definitive and celebratory.
+Technical & Design Constraints
+Build as a single-page Next.js app suitable for deployment on Vercel.
+Use TypeScript.
+Keep scope intentionally small and focused.
+Include a README.md explaining:
+The concept.
+How the puzzle works and how solvability is guaranteed.
+How to run locally and deploy.
+Tone & Style
+Industrial + festive.
+High-voltage, clean UI.
+Minimal text, intuitive interaction.
+The joy comes from figuring it out and snapping everything into balance, not randomness or spectacle alone.
+Make all files directly in this directory.
+Assume this is a one-day Shipmas project: bold, clever, tightly scoped, and guaranteed solvable.
