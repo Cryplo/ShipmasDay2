@@ -239,7 +239,7 @@ export default function GridSyncGame() {
                 }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
-                Light SyncHRONIZED
+                Winner!
               </motion.h2>
 
               <p className="text-soft-600 font-mono mb-8">
