@@ -20,7 +20,7 @@ export default function GridSyncGame() {
 
   // Initialize puzzle
   useEffect(() => {
-    setPuzzle(generatePuzzle({ numSwitches: 5, numBulbs: 5 }));
+    setPuzzle(generatePuzzle({ numSwitches: 7, numBulbs: 7 }));
   }, []);
 
   // Timer
@@ -125,7 +125,7 @@ export default function GridSyncGame() {
 
   // Reset game
   const handleReset = useCallback(() => {
-    setPuzzle(generatePuzzle({ numSwitches: 5, numBulbs: 5 }));
+    setPuzzle(generatePuzzle({ numSwitches: 7, numBulbs: 7 }));
     setRevealedConnections(new Set());
     setActiveSwitch(null);
     setMoveCount(0);
