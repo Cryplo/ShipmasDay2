@@ -1,4 +1,4 @@
-// Puzzle generation and logic for Grid Sync
+// Puzzle generation and logic for Light Sync
 // Uses a bipartite graph approach with guaranteed solvability
 
 export interface PuzzleConfig {

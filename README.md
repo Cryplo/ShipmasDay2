@@ -1,4 +1,4 @@
-# Grid Sync
+# Light Sync
 
 A high-speed logic puzzle where you play as a Holiday Systems Engineer repairing a fractured festive electrical grid.
 

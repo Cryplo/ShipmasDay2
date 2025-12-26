@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Grid Sync - Holiday Systems Engineering',
+  title: 'Light Sync - Holiday Systems Engineering',
   description: 'A logic puzzle where you repair a festive electrical grid by finding the right switch configuration',
   openGraph: {
-    title: 'Grid Sync',
+    title: 'Light Sync',
     description: 'Repair the holiday grid. Find the right combination.',
     type: 'website',
   },

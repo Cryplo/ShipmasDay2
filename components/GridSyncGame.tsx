@@ -166,7 +166,7 @@ export default function GridSyncGame() {
               transition={{ type: 'spring', duration: 0.5 }}
             >
               <h1 className="text-3xl font-bold text-holiday-red tracking-wide mb-2">
-                GRID SYNC
+                Light Sync
               </h1>
               <p className="text-soft-500 font-mono text-sm mb-8">Holiday Light Puzzle</p>
 
@@ -239,7 +239,7 @@ export default function GridSyncGame() {
                 }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
-                GRID SYNCHRONIZED
+                Light SyncHRONIZED
               </motion.h2>
 
               <p className="text-soft-600 font-mono mb-8">

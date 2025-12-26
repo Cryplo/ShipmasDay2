@@ -5,11 +5,11 @@
 ## Output
 
 ```
-Grid Sync is complete! Let me give you a summary of what was built:
+Light Sync is complete! Let me give you a summary of what was built:
 
 ---
 
-## Grid Sync - Holiday Systems Engineering Puzzle
+## Light Sync - Holiday Systems Engineering Puzzle
 
 A high-speed logic puzzle where you repair a fractured festive electrical grid.
 
