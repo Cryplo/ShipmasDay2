@@ -21,11 +21,11 @@ export interface Puzzle {
  * Generate a random puzzle with guaranteed solvability.
  *
  * Algorithm:
- * 1. Create a random wiring from switches to bulbs (each switch affects 1-3 bulbs)
- * 2. Define the solution as all switches ON
- * 3. When a switch is ON, it XORs its connected bulbs
- * 4. The puzzle is solvable: just toggle switches to match the solution
- * 5. Scramble the starting switch positions randomly
+ * 1. Create a random wiring from switches to bulbs (each switch affects 2-4 bulbs)
+ * 2. Generate a random solution (each switch randomly ON or OFF)
+ * 3. Start from the solved state where all bulbs are lit
+ * 4. Scramble by randomly flipping switches using the game logic
+ * 5. This guarantees solvability: just reverse the flips to reach the solution
  */
 export function generatePuzzle(config: PuzzleConfig = { numSwitches: 5, numBulbs: 5 }): Puzzle {
   const { numSwitches, numBulbs } = config;
@@ -74,14 +74,19 @@ export function generatePuzzle(config: PuzzleConfig = { numSwitches: 5, numBulbs
     }
   }
 
-  // The solution: all switches OFF (this is our target state where all bulbs are lit)
-  const solution: boolean[] = new Array(numSwitches).fill(false);
+  // The solution: randomly set each switch to ON or OFF
+  // This is the target state where all bulbs will be lit
+  const solution: boolean[] = [];
+  for (let i = 0; i < numSwitches; i++) {
+    solution.push(Math.random() < 0.5);
+  }
 
   // Start from the solved state (all switches match solution, all bulbs lit)
   const switchStates: boolean[] = [...solution];
 
-  // Randomly toggle switches to scramble the puzzle
-  // Toggle between 3 and numSwitches random switches (ensuring puzzle isn't already solved)
+  // Scramble the puzzle by randomly flipping switches using the game logic
+  // This guarantees the puzzle is solvable by reversing the flips
+  // Toggle between 3 and numSwitches switches (ensuring puzzle isn't already solved)
   const numToggles = Math.floor(Math.random() * (numSwitches - 2)) + 3;
   const toggledIndices: number[] = [];
   
@@ -93,9 +98,9 @@ export function generatePuzzle(config: PuzzleConfig = { numSwitches: 5, numBulbs
     }
   }
   
-  // Apply the toggles
-  for (let i = 0; i < toggledIndices.length; i++) {
-    switchStates[toggledIndices[i]] = !switchStates[toggledIndices[i]];
+  // Apply the toggles to scramble from the solution state
+  for (const idx of toggledIndices) {
+    switchStates[idx] = !switchStates[idx];
   }
 
   // Calculate initial bulb states
